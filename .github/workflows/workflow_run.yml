@@ -38,7 +38,7 @@ jobs:
           gh pr view --repo "${PR_TARGET_REPO}" "${PR_BRANCH}" \
             --json 'number,headRefOid' \
             --jq '"number=\(.number)\nhead-sha=\(.headRefOid)"' \
-            >> $GITHUB_OUTPUT
+            >> $GITHUB_STEP_SUMMARY
           echo '' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
       - name: Upload artifact
