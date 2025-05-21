@@ -11,6 +11,12 @@ jobs:
     steps:
       - name: Trigger
         run: echo "Triggering workflow"
+      - name: Add event payload to summary
+        run: |
+          echo '### Event Payload' >> $GITHUB_STEP_SUMMARY
+          echo '\n```json' >> $GITHUB_STEP_SUMMARY
+          cat ${{ github.event_path }} >> $GITHUB_STEP_SUMMARY
+          echo '\n```' >> $GITHUB_STEP_SUMMARY
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
