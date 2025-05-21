@@ -1,5 +1,5 @@
 name: Backport workflow
-run-name: Backport workflow for trigger \#${{ github.event.workflow_run.run_number }}
+run-name: "Backport workflow for ${{ github.event.workflow_run.head_branch }} #${{ github.event.workflow_run.run_number }}"
 on:
   workflow_run:
     workflows: "Backport trigger"
@@ -12,6 +12,7 @@ jobs:
     steps:
       - name: Trigger
         run: echo "Triggering workflow"
+
       - name: Add event payload to summary
         run: |
           echo '### Event Payload' >> $GITHUB_STEP_SUMMARY
@@ -20,6 +21,10 @@ jobs:
           cat ${{ github.event_path }} >> $GITHUB_STEP_SUMMARY
           echo '' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+
+      # event.workflow_run.pull_requests contains the PR that triggered the workflow,
+      # but it's not populated when the PR comes from a fork for some reason.
+      # Instead, use gh cli to get the PR details using the other properties
       - name: Get PR context
         id: set-pr-context
         env:
@@ -32,14 +37,10 @@ jobs:
                 || github.event.workflow_run.head_branch
             }}
         run: |
-          echo '### PR Context' >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          echo '' >> $GITHUB_STEP_SUMMARY
           gh pr view --repo "${PR_TARGET_REPO}" "${PR_BRANCH}" \
             --json 'number,headRefOid' \
-            >> $GITHUB_STEP_SUMMARY
-          echo '' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+            --jq '"number=\(.number)\nhead_sha=\(.headRefOid)"' \
+            >> $GITHUB_OUTPUT
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
