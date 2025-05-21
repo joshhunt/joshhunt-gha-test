@@ -8,11 +8,11 @@ on:
 
 jobs:
   backport:
+    # Only run this job if the triggering workflow was not skipped
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger
-        run: echo "Triggering workflow"
-
+      # Just to debug the event payload...
       - name: Add event payload to summary
         run: |
           echo '### Event Payload' >> $GITHUB_STEP_SUMMARY
@@ -25,8 +25,8 @@ jobs:
       # event.workflow_run.pull_requests contains the PR that triggered the workflow,
       # but it's not populated when the PR comes from a fork for some reason.
       # Instead, use gh cli to get the PR details using the other properties
-      - name: Get PR context
-        id: set-pr-context
+      - name: Get PR info
+        id: pr-info
         env:
           GH_TOKEN: ${{ github.token }}
           PR_TARGET_REPO: ${{ github.repository }}
@@ -41,9 +41,10 @@ jobs:
             --json 'number,headRefOid' \
             --jq '"number=\(.number)\nhead_sha=\(.headRefOid)"' \
             >> $GITHUB_OUTPUT
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: event-payload
-          path: ${{ github.event_path }}
-          retention-days: 1
+
+      - name: Do backport
+        env:
+          PR_TARGET_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.pr-info.outputs.number }}
+        run: |
+          echo "Prentend to backport PR ${PR_TARGET_REPO} #${PR_NUMBER} to whatever the labels say"
