@@ -7,21 +7,10 @@ on:
 
 jobs:
   trigger:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Trigger
-        run: echo "Triggering workflow"
-      - name: Add event payload to summary
         run: |
-          echo '### Event Payload' >> $GITHUB_STEP_SUMMARY
-          echo '```json' >> $GITHUB_STEP_SUMMARY
-          echo '' >> $GITHUB_STEP_SUMMARY
-          cat ${{ github.event_path }} >> $GITHUB_STEP_SUMMARY
-          echo '' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: event-payload
-          path: ${{ github.event_path }}
-          retention-days: 1
+          echo "Triggering workflow"
+          echo "See https://github.com/${{ github.repository }}/actions/workflows/workflow_run.yml for progress"
