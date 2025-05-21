@@ -1,12 +1,12 @@
-name: Backport trigger
+name: Backport workflow
 on:
-  pull_request:
+  workflow_run:
+    workflows: "Backport trigger"
     types:
-      - closed
-      - labeled
+      - completed
 
 jobs:
-  trigger:
+  backport:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger
