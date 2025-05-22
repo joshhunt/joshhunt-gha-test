@@ -1,0 +1,13 @@
+name: On push
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check jq version
+        run: jq --version
+      - name: Parse event with jq
+        run: |
+          jq '.repository.name' "$GITHUB_EVENT_PATH"
