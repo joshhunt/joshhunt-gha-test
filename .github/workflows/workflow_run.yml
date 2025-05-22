@@ -25,26 +25,28 @@ jobs:
       # event.workflow_run.pull_requests contains the PR that triggered the workflow,
       # but it's not populated when the PR comes from a fork for some reason.
       # Instead, use gh cli to get the PR details using the other properties
-      - name: Get PR info
+      - name: Download PR info artifact
+        uses: actions/download-artifact@v4
+        id: download-pr-info
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          name: event-payload
+          github-token: ${{ github.token }}
+
+      - name: Get PR Info
         id: pr-info
         env:
-          GH_TOKEN: ${{ github.token }}
-          PR_TARGET_REPO: ${{ github.repository }}
-          PR_BRANCH: |-
-            ${{
-              (github.event.workflow_run.head_repository.owner.login != github.event.workflow_run.repository.owner.login)
-                && format('{0}:{1}', github.event.workflow_run.head_repository.owner.login, github.event.workflow_run.head_branch)
-                || github.event.workflow_run.head_branch
-            }}
+          PR_INFO_PATH: ${{ steps.download-pr-info.outputs.path }}
+          PR_INFO_FILE: ${{ steps.download-pr-info.outputs.path }}/backport_data.json
         run: |
-          gh pr view --repo "${PR_TARGET_REPO}" "${PR_BRANCH}" \
-            --json 'number,headRefOid' \
-            --jq '"number=\(.number)\nhead_sha=\(.headRefOid)"' \
-            >> $GITHUB_OUTPUT
+          ls -lah "$PR_INFO_PATH"
+          jq -r 'to_entries[] | select(.value | type != "object") | "\(.key)=\(.value)"' "$PR_INFO_FILE" >> $GITHUB_OUTPUT
 
       - name: Do backport
         env:
           PR_TARGET_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ steps.pr-info.outputs.number }}
+          PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
+          ACTION: ${{ steps.pr-info.outputs.action }}
+          LABEL: ${{ steps.pr-info.outputs.label }}
         run: |
-          echo "Prentend to backport PR ${PR_TARGET_REPO} #${PR_NUMBER} to whatever the labels say"
+          echo "Prentend to backport PR ${PR_TARGET_REPO} #${PR_NUMBER} to whatever the labels say. Action: ${ACTION}, label: ${LABEL}"
