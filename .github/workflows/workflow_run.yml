@@ -36,8 +36,8 @@ jobs:
       - name: Get PR Info
         id: pr-info
         env:
-          PR_INFO_PATH: ${{ steps.download-pr-info.outputs.download_path }}
-          PR_INFO_FILE: ${{ steps.download-pr-info.outputs.download_path }}/backport_data.json
+          PR_INFO_PATH: ${{ steps.download-pr-info.outputs.download-path }}
+          PR_INFO_FILE: ${{ steps.download-pr-info.outputs.download-path }}/backport_data.json
         run: |
           ls -lah "$PR_INFO_PATH"
           jq -r 'to_entries[] | select(.value | type != "object") | "\(.key)=\(.value)"' "$PR_INFO_FILE" >> $GITHUB_OUTPUT
